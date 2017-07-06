@@ -21,7 +21,7 @@ kamal | 1000 |   30 |
 
 Solution:=
 sqoop import --connect jdbc:mysql://localhost/sqoop --username root --password cloudera --null-string \'\\\\N\' --null-non-string \'\\\\N\' --hive-import -
--hive-table sqoop.emp_new --create-hive-table --hive-drop-import-delimns --table emp
+-hive-table sqoop.emp_new --create-hive-table --hive-drop-import-delimns --table emp --split-by eage
 
 Hive table data after sqoop import from mysql table
 
