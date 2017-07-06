@@ -1,0 +1,38 @@
+Use Case: Sqoop import to hive and drop \n, \r, \01 from the column data inside mysql table
+
+Sample data set inside mysql table
++-----------+------+------+   
+| ename     | esal | eage |
++-----------+------+------+
+| raj       | 2000 |   27 |
+| kamal     | 5000 |   28 |
+| ravi      | 5000 |   29 |
+| pi
+ku     | 5000 |   24 |
+| raj
+kamal | 1000 |   30 |
+| kk        | 3333 |   26 |
+| kk        | 3333 |   26 |
+| uu        | 2222 |   26 |
+| nn        | 1111 |   26 |
+| pp        | 5555 |   26 |
+| mm        | 4444 |   26 |
++-----------+------+------+
+
+Solution:=
+sqoop import --connect jdbc:mysql://localhost/sqoop --username root --password cloudera --null-string \'\\\\N\' --null-non-string \'\\\\N\' --hive-import -
+-hive-table sqoop.emp_new --create-hive-table --hive-drop-import-delimns --table emp
+
+Hive table data after sqoop import from mysql table
+
+piku	5000	24
+raj	2000	27
+kk	3333	26
+kk	3333	26
+uu	2222	26
+nn	1111	26
+pp	5555	26
+mm	4444	26
+kamal	5000	28
+ravi	5000	29
+rajkamal	1000	30
