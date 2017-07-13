@@ -1,0 +1,76 @@
+step 1: mysql dataset:
+mysql> create table emp(id int(5) primary key, name varchar(20), sal int(10), year int(10));
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> describe emp;
++-------+-------------+------+-----+---------+-------+
+| Field | Type        | Null | Key | Default | Extra |
++-------+-------------+------+-----+---------+-------+
+| id    | int(5)      | NO   | PRI | NULL    |       |
+| name  | varchar(20) | YES  |     | NULL    |       |
+| sal   | int(10)     | YES  |     | NULL    |       |
+| year  | int(10)     | YES  |     | NULL    |       |
++-------+-------------+------+-----+---------+-------+
+4 rows in set (0.00 sec)
+
+mysql> insert into emp values (1001,'emp1',5000,2010),(1002,'emp2',5000,2011),(1003,'emp3',4000,2010),(1004,'emp4',7000,2011),(1005,'emp5',6000,2010);
+Query OK, 5 rows affected (0.02 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> select * from emp;
++------+------+------+------+
+| id   | name | sal  | year |
++------+------+------+------+
+| 1001 | emp1 | 5000 | 2010 |
+| 1002 | emp2 | 5000 | 2011 |
+| 1003 | emp3 | 4000 | 2010 |
+| 1004 | emp4 | 7000 | 2011 |
+| 1005 | emp5 | 6000 | 2010 |
++------+------+------+------+
+5 rows in set (0.00 sec)
+
+step 2: sqoop import to hdfs
+sqoop import -connect jdbc:mysql://localhost/test --username root --password cloudera --target-dir '/sqoop_emp_data' --table emp --m1
+
+[cloudera@quickstart Desktop]$ hadoop fs -cat /sqoop_emp_data/part-m-00000
+1001,emp1,5000,2010
+1002,emp2,5000,2011
+1003,emp3,4000,2010
+1004,emp4,7000,2011
+1005,emp5,6000,2010
+
+step 3: external hive table creation on sqooped hdfs path
+create external table emp_temp(id int, name string, sal int, year int)row format delimited fields terminated by ',' lines terminated by '\n' location '/sqoop_emp_data';
+hive> select * from emp_temp;
+OK
+1001	emp1	5000	2010
+1002	emp2	5000	2011
+1003	emp3	4000	2010
+1004	emp4	7000	2011
+1005	emp5	6000	2010
+Time taken: 0.391 seconds, Fetched: 5 row(s)
+
+step 4: create dynamic partition on emp_temp table
+create table emp_dynamic(id int, name string, sal int)partitioned by(year int) row format delimited fields terminated by ',' lines terminated by '\n' location '/sqoop_emp_data';
+
+hive> set hive.exec.dynamic.partition.mode=nonstrict;
+
+insert overwrite table emp_dynamic partition(year) select id,name,sal,year from emp_temp;
+
+step 5: see partition created at /sqoop_emp_data
+[cloudera@quickstart Desktop]$ hadoop fs -ls /sqoop_emp_data
+Found 4 items
+-rw-r--r--   1 cloudera supergroup          0 2017-07-12 19:35 /sqoop_emp_data/_SUCCESS
+-rw-r--r--   1 cloudera supergroup        100 2017-07-12 19:35 /sqoop_emp_data/part-m-00000
+drwxr-xr-x   - cloudera supergroup          0 2017-07-12 20:12 /sqoop_emp_data/year=2010
+drwxr-xr-x   - cloudera supergroup          0 2017-07-12 20:12 /sqoop_emp_data/year=2011
+
+
+
+
+
+
+
+
+
+
