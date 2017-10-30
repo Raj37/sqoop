@@ -1,0 +1,44 @@
+create table tab1(id int, loc string, ct1 timestamp)row format delimited fields terminated by ',' lines terminated by '\n';
+
+create table tab2(id int, loc string, ct1 timestamp)row format delimited fields terminated by ',' lines terminated by '\n';
+
+insert into tab1 values (1,"hyd",'2017-10-30 00:10:00'),(2,kol,2017-10-30 00:10:00),(3,pune,2017-10-30 00:10:00),(4,del,2017-10-30 00:10:00)
+
+insert into tab2 values (2,"chen",'2017-10-31 00:10:00'),(5,mum,2017-10-31 00:10:00)
+
+
+hive> select * from tab1;
+OK
+1	hyd	2017-10-30 00:10:00
+2	kol	2017-10-30 00:10:00
+3	pune	2017-10-30 00:10:00
+4	del	2017-10-30 00:10:00
+Time taken: 0.043 seconds, Fetched: 4 row(s)
+
+hive> select * from tab2;
+OK
+2	chen	2017-10-31 00:10:00
+5	mum	2017-10-31 00:10:00
+Time taken: 0.043 seconds, Fetched: 2 row(s)
+
+Create view in hive contains only older,updated and newly added records.
+
+hive> select t1.* from
+    >   (select * from tab1 
+    > UNION ALL 
+    >    select * from tab2) t1 
+    > JOIN 
+    >   (select q.id,max(q.ct1) mt from 
+    >     (select * from tab1 
+    > UNION ALL 
+    >      select * from tab2) q
+    >   GROUP BY q.id) t2 
+    > ON t1.id = t2.id AND t1.ct1 = t2.mt;
+
+hive> select * from myview;
+1	hyd	2017-10-30 00:10:00
+2	chen	2017-10-31 00:10:00
+3	pune	2017-10-30 00:10:00
+4	del	2017-10-30 00:10:00
+5	mum	2017-10-31 00:10:00
+Time taken: 75.684 seconds, Fetched: 5 row(s)
