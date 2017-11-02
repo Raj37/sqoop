@@ -23,7 +23,8 @@ Time taken: 0.043 seconds, Fetched: 2 row(s)
 
 Create view in hive contains only older,updated and newly added records.
 
-hive> select t1.* from
+hive> CREATE VIEW myview AS
+    >select t1.* from
     >   (select * from tab1 
     > UNION ALL 
     >    select * from tab2) t1 
